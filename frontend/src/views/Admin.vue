@@ -10,6 +10,7 @@ import "../admin.css";
 import CityPicker from "../components/CityPicker.vue";
 import MediaField from "../components/MediaField.vue";
 import MailSettings from "../components/MailSettings.vue";
+import { useEditorDraft } from "../useEditorDraft";
 const router = useRouter();
 const username = ref(""),
   ready = ref(false),
@@ -89,9 +90,17 @@ const fields: Record<string, Field[]> = {
 };
 const editor = ref(false),
   editingId = ref<number | null>(null),
-  form = reactive<Record<string, any>>({}),
   formError = ref(""),
   deleting = ref<Entry | null>(null);
+const drafts = useEditorDraft();
+const { form, hasDraft, restored, persistent } = drafts;
+const draftNotice = computed(() => {
+  if (!hasDraft.value) return "填写时自动保存草稿，关闭后可继续填写。";
+  if (!persistent.value) return "草稿暂存于当前页面，关闭弹窗后可继续；刷新页面将丢失，请尽快保存。";
+  return restored.value
+    ? "已恢复上次未保存的草稿。草稿仅保存在当前浏览器。"
+    : "草稿已自动保存在当前浏览器，关闭或刷新后可继续填写。";
+});
 const passwords = reactive({ current_password: "", new_password: "" });
 const passwordError = ref("");
 const menuOpen = ref(false);
@@ -140,12 +149,15 @@ async function switchTab(key: string) {
   window.scrollTo(0, 0);
   await load();
 }
+function draftKey(id: number | null = null) {
+  return `likegirl:admin-editor-draft:v1:${encodeURIComponent(username.value)}:${tab.value}:${id ?? "new"}`;
+}
 function openEditor(entry?: Entry) {
   editingId.value = entry?.id || null;
   formError.value = "";
-  for (const key of Object.keys(form)) delete form[key];
+  const initial: Record<string, string | boolean> = {};
   for (const field of fields[tab.value])
-    form[field.key] = entry
+    initial[field.key] = entry
       ? ((entry as any)[field.key] ?? "")
       : field.type === "check"
         ? ["published", "annual"].includes(field.key)
@@ -157,19 +169,32 @@ function openEditor(entry?: Entry) {
               day: "2-digit",
             }).format(new Date())
           : "";
-  if (!entry && tab.value === "articles") form.author = state.site?.boy_name;
+  if (!entry && tab.value === "articles") initial.author = state.site?.boy_name || "";
+  if (tab.value === "places") initial._city_region = "";
+  drafts.begin(draftKey(editingId.value), initial);
   editor.value = true;
 }
+function closeEditor() {
+  if (!busy.value) editor.value = false;
+}
+function discardDraft() {
+  if (busy.value || !window.confirm("放弃当前草稿？未保存的填写内容将被清除。")) return;
+  drafts.clear();
+  editor.value = false;
+}
 async function save() {
+  if (busy.value) return;
   busy.value = true;
   formError.value = "";
-  const data = { ...form };
+  const data: Record<string, string | boolean | null> = { ...form };
+  delete data._city_region;
   if (tab.value === "wishes" && !data.date) data.date = null;
   try {
     await request(
       `/admin/${tab.value}${editingId.value ? `/${editingId.value}` : ""}`,
       write(editingId.value ? "PUT" : "POST", data),
     );
+    drafts.clear();
     editor.value = false;
     notify("这一份回忆，已好好收藏");
     await Promise.all([load(), loadSite()]);
@@ -186,6 +211,7 @@ async function remove() {
     await request(`/admin/${tab.value}/${deleting.value.id}`, {
       method: "DELETE",
     });
+    drafts.clear(draftKey(deleting.value.id));
     deleting.value = null;
     if (entries.value.length === 1 && page.value > 1) page.value--;
     notify("内容已删除");
@@ -398,12 +424,17 @@ onMounted(async () => {
         v-if="editor"
         :title="`${editingId ? '编辑' : '添加'} · ${activeTab.name}`"
         wide
-        @close="!busy && (editor = false)"
+        @close="closeEditor"
         ><form class="editor-form" @submit.prevent="save">
+          <p class="editor-draft-notice" role="status">{{ draftNotice }}</p>
+          <fieldset class="editor-fields" :disabled="busy">
           <template v-for="field in fields[tab]" :key="field.key"
-            ><CityPicker v-if="field.type === 'city'" v-model="form[field.key]" /><MediaField
+            ><CityPicker
+              v-if="field.type === 'city'"
+              v-model="(form[field.key] as string)"
+              v-model:region="(form._city_region as string)" /><MediaField
               v-else-if="field.type === 'image'"
-              v-model="form[field.key]"
+              v-model="(form[field.key] as string)"
               :label="field.label"
               :required="field.required" /><label
               v-else-if="field.type === 'check'"
@@ -415,7 +446,7 @@ onMounted(async () => {
               >{{ field.label
               }}<textarea
                 v-if="field.type === 'textarea'"
-                v-model="form[field.key]"
+                v-model="(form[field.key] as string)"
                 :required="field.required"
                 :maxlength="field.max"
                 rows="8" /><input
@@ -425,17 +456,25 @@ onMounted(async () => {
                 :required="field.required"
                 :maxlength="field.max" /></label
           ></template>
+          </fieldset>
           <p v-if="formError" class="error-text" role="alert">
             {{ formError }}
           </p>
-          <div class="modal-actions">
+          <div class="modal-actions editor-actions">
+            <button
+              v-if="hasDraft"
+              type="button"
+              class="text-link discard-draft"
+              :disabled="busy"
+              @click="discardDraft"
+            >放弃草稿</button>
             <button
               type="button"
               class="button secondary"
               :disabled="busy"
-              @click="editor = false"
+              @click="closeEditor"
             >
-              取消</button
+              暂存并关闭</button
             ><button class="button" :disabled="busy">
               {{ busy ? "正在收藏…" : "保存这份回忆" }}
             </button>

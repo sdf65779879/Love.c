@@ -65,6 +65,10 @@
 .overview-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .overview-links button { background: #fcf4f2; border: 0; padding: 24px; display: grid; justify-items: center; gap: 12px; border-radius: 6px; }
 .overview-links b { font-size: 24px; }
+.editor-draft-notice { font-size: 12px; line-height: 1.8; color: #786a63; }
+.editor-fields { display: flex; flex-direction: column; gap: 22px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.editor-actions { flex-wrap: wrap; }
+.editor-actions .discard-draft { margin-right: auto; color: #a34b59; }
 @media(max-width: 1100px) { .console-layout { grid-template-columns: 185px minmax(0, 1fr); } .console-main { padding: 22px 18px; } .console-card { padding: 22px; } .settings-grid { gap: 18px; } .couple-fields { grid-template-columns: 1fr; } }
 @media(max-width: 780px) { .console-bar { padding: 0 16px; } .console-bar .nav-toggle { display: flex; } .console-bar > div { gap: 12px; } .console-bar .operator { display: none; } .console-layout { display: block; } .console-side { display: none; } .console-side.expanded {
     display: block; position: fixed; z-index: 9; left: 0; width: min(268px, 84vw);
