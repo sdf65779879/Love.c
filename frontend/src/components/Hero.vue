@@ -41,7 +41,7 @@ defineProps<{ compact?: boolean }>();
     >
       <path d="M0 25Q360 85 720 35T1440 25V76H0Z" fill="white" opacity=".4" />
       <path d="M0 45Q360 5 720 45T1440 35V76H0Z" fill="white" opacity=".6" />
-      <path d="M0 50Q360 82 720 52T1440 53V76H0Z" fill="#fdfbf9" />
+      <path d="M0 50Q360 82 720 52T1440 53V76H0Z" fill="var(--page-bg)" />
     </svg>
     <span v-if="!compact" class="hero-corner"
       >每一个有你的日子，都值得珍藏。</span

@@ -47,6 +47,7 @@ class SettingsInput(MediaInput):
     girl_qq: str = Field(default="", pattern=r"^(?:[1-9][0-9]{4,10})?$")
     logo_text: str = Field(default="", max_length=80)
     avatar_blur: bool = True
+    background_theme: Literal["cream", "strawberry", "lavender"] = "cream"
     card_titles: dict[
         Literal[
             "/moments", "/places", "/about", "/album", "/wishlist", "/anniversaries"

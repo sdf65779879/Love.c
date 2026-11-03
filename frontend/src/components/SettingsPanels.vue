@@ -8,7 +8,12 @@ import MediaField from "./MediaField.vue";
 defineProps<{ about?: boolean }>();
 const site = state.site!;
 const basic = reactive({ title: site.title, logo_text: site.logo_text || "", subtitle: site.subtitle,
-  avatar_blur: site.avatar_blur !== false });
+  avatar_blur: site.avatar_blur !== false, background_theme: site.background_theme || "cream" });
+const themes = [
+  { id: "cream", name: "经典奶油", note: "原配色" },
+  { id: "strawberry", name: "草莓奶昔", note: "柔粉色" },
+  { id: "lavender", name: "香芋慕斯", note: "浅芋紫" },
+] as const;
 const couple = reactive({ boy_name: site.boy_name, girl_name: site.girl_name,
   boy_qq: site.boy_qq || "", girl_qq: site.girl_qq || "", boy_avatar: site.boy_avatar,
   girl_avatar: site.girl_avatar, start_date: site.start_date.slice(0, 19) });
@@ -48,6 +53,15 @@ async function save(section: string, data: object) {
       <label>站点 LOGO 文字<input v-model="basic.logo_text" maxlength="80" placeholder="留空使用站点标题" /></label>
       <label>站点文案<textarea v-model="basic.subtitle" maxlength="200" rows="3" /></label>
       <label>头像背景模糊<select v-model="basic.avatar_blur"><option :value="true">开启</option><option :value="false">关闭</option></select></label>
+      <fieldset class="theme-picker">
+        <legend>小站背景配色</legend>
+        <div class="theme-options">
+          <label v-for="theme in themes" :key="theme.id" class="theme-option" :data-theme="theme.id">
+            <input v-model="basic.background_theme" type="radio" name="background-theme" :value="theme.id" />
+            <span>{{ theme.name }}<small>{{ theme.note }}</small></span>
+          </label>
+        </div>
+      </fieldset>
       <p v-if="errors.basic" class="error-text" role="alert">{{ errors.basic }}</p>
       <div class="settings-actions"><button class="button" :disabled="busy.basic">{{ busy.basic ? '保存中…' : '保存基本设置' }}</button></div>
     </form>

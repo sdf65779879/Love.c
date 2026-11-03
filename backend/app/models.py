@@ -69,6 +69,7 @@ class SiteSettings(Base):
     title: Mapped[str] = mapped_column(String(80), default="LOVE.C")
     logo_text: Mapped[str] = mapped_column(String(80), default="")
     avatar_blur: Mapped[bool] = mapped_column(Boolean, default=True)
+    background_theme: Mapped[str] = mapped_column(String(16), default="cream")
     card_titles: Mapped[dict] = mapped_column(JSON, default=dict)
     subtitle: Mapped[str] = mapped_column(
         String(200), default="喜欢花，喜欢浪漫，也喜欢你。"

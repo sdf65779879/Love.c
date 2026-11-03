@@ -1,15 +1,37 @@
 :root {
   font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: #494440;
-  background: #fdfbf9;
+  background: var(--page-bg);
   font-synthesis: none;
   font-size: 14px;
-  --accent: #d97889;
-  --accent-dark: #b75066;
   --muted: #948a84;
   --line: #eee6e0;
   --serif: "Noto Serif SC", "Songti SC", SimSun, serif;
   --shadow: 0 6px 24px #76625607;
+}
+:root, [data-theme="cream"] {
+  --page-bg: #fdfbf9;
+  --page-grid: #d1bfb515;
+  --header-bg: #fffcf9ed;
+  --footer-bg: #fbf8f3;
+  --accent: #d97889;
+  --accent-dark: #b75066;
+}
+[data-theme="strawberry"] {
+  --page-bg: #fff0f2;
+  --page-grid: #c4778a19;
+  --header-bg: #fff7f8ed;
+  --footer-bg: #fbe5eb;
+  --accent: #bd576e;
+  --accent-dark: #9a3e55;
+}
+[data-theme="lavender"] {
+  --page-bg: #f5effb;
+  --page-grid: #a18ab91c;
+  --header-bg: #fcf8ffed;
+  --footer-bg: #ede4f6;
+  --accent: #9269aa;
+  --accent-dark: #724a89;
 }
 * {
   box-sizing: border-box;
@@ -18,8 +40,8 @@ body {
   margin: 0;
   min-width: 320px;
   background-image:
-    linear-gradient(#d1bfb515 1px, transparent 1px),
-    linear-gradient(90deg, #d1bfb515 1px, transparent 1px);
+    linear-gradient(var(--page-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--page-grid) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 button,
@@ -218,7 +240,7 @@ small {
 }
 .site-header {
   height: 78px;
-  background: #fffcf9ed;
+  background: var(--header-bg);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -775,7 +797,7 @@ small {
   text-align: center;
   margin-top: 65px;
   padding: 35px 24px 27px;
-  background: linear-gradient(transparent, #fbf8f3 40%);
+  background: linear-gradient(transparent, var(--footer-bg) 40%);
   color: #a59990;
 }
 .site-footer > svg {

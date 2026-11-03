@@ -10,6 +10,11 @@ const router = useRouter();
 const open = ref(false);
 const showSite = computed(() => !route.meta.admin && !route.meta.public && !!state.site);
 const leaving = ref(false);
+watch(
+  () => state.site?.background_theme,
+  theme => { document.documentElement.dataset.theme = theme || "cream"; },
+  { immediate: true },
+);
 async function leave() {
   leaving.value = true;
   try {

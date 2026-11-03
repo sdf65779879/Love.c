@@ -49,6 +49,15 @@
 .settings-panel input, .settings-panel textarea, .settings-panel select { margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--console-paper); color: var(--console-ink); width: 100%; padding: 10px 12px; min-height: 40px; font: inherit; }
 .settings-panel input:focus, .settings-panel textarea:focus, .settings-panel select:focus { outline: 2px solid #d978892b; border-color: var(--accent); }
 .settings-actions { display: flex; justify-content: flex-end; margin-top: auto; }
+.theme-picker { margin: 0; padding: 0; border: 0; min-width: 0; }
+.theme-picker legend { margin-bottom: 8px; padding: 0; font-size: 13px; color: var(--console-muted); }
+.theme-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
+.theme-option { display: flex; gap: 7px; align-items: center; padding: 11px 8px; cursor: pointer; border: 1px solid var(--line); border-radius: 8px; background: var(--page-bg); }
+.theme-option:has(:checked) { border-color: var(--accent-dark); box-shadow: inset 0 0 0 1px var(--accent-dark); }
+.theme-option:focus-within { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+.theme-option input[type="radio"] { width: 14px; height: 14px; min-height: 0; margin: 0; padding: 0; flex: none; accent-color: var(--accent-dark); }
+.theme-option span { color: var(--console-ink); }
+.theme-option small { display: block; margin-top: 3px; color: var(--console-muted); }
 .console-shell .button { border-radius: 8px; }
 .settings-wide { grid-column: 1 / -1; }
 .couple-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }

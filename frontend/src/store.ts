@@ -7,6 +7,7 @@ export interface Site {
   subtitle: string;
   logo_text: string;
   avatar_blur: boolean;
+  background_theme: "cream" | "strawberry" | "lavender";
   card_titles: Record<string, string>;
   boy_name: string;
   boy_qq: string;
