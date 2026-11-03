@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import App from "./App.vue";
 import Home from "./views/Home.vue";
 import Collection from "./views/Collection.vue";
-import Messages from "./views/Messages.vue";
 import About from "./views/About.vue";
 import Article from "./views/Article.vue";
 import Login from "./views/Login.vue";
@@ -39,13 +38,10 @@ const router = createRouter({
       props: { kind: "wishes" },
       meta: { title: "恋爱清单" },
     },
-    {
-      path: "/gifts",
-      component: Collection,
-      props: { kind: "gifts" },
-      meta: { title: "礼物墙" },
-    },
-    { path: "/messages", component: Messages, meta: { title: "留言板" } },
+    { path: "/places", component: () => import("./views/Places.vue"), meta: { title: "走过的地方" } },
+    { path: "/anniversaries", component: () => import("./views/Anniversaries.vue"), meta: { title: "纪念日" } },
+    { path: "/messages", redirect: "/places" },
+    { path: "/gifts", redirect: "/anniversaries" },
     { path: "/about", component: About, meta: { title: "关于我们" } },
     {
       path: "/login",

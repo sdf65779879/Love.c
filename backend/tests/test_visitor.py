@@ -46,8 +46,9 @@ def db_session():
         "/api/content/articles",
         "/api/content/photos",
         "/api/content/wishes",
-        "/api/content/gifts",
-        "/api/content/messages",
+        "/api/content/anniversaries",
+        "/api/content/places",
+        "/api/atlas",
         "/api/articles/1",
         "/uploads/" + "a" * 32 + ".webp",
         "/api/visitor/me",
@@ -60,10 +61,11 @@ def test_anonymous_cannot_read_private_content(client, path):
     assert result.headers["cache-control"] == "no-store"
 
 
-def test_anonymous_cannot_write_message(client):
+def test_anonymous_cannot_write_place(client):
     assert (
         client.post(
-            "/api/messages", json={"name": "test", "content": "test"}
+            "/api/admin/places",
+            json={"title": "test", "city_id": "beijing", "date": "2025-06-01"},
         ).status_code
         == 401
     )

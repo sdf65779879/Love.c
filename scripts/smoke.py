@@ -51,8 +51,8 @@ def main():
             "/moments",
             "/album",
             "/wishlist",
-            "/gifts",
-            "/messages",
+            "/anniversaries",
+            "/places",
             "/about",
             "/login",
             "/admin",
@@ -93,15 +93,8 @@ def main():
                 {"title": tag, "image": "/images/cover.png", "date": "2024-05-20"},
             ),
             ("wishes", {"title": tag, "completed": False}),
-            (
-                "gifts",
-                {
-                    "title": tag,
-                    "sender": "smoke",
-                    "description": "test gift",
-                    "date": "2024-05-20",
-                },
-            ),
+            ("places", {"title": tag, "city_id": "hangzhou", "date": "2024-05-20"}),
+            ("anniversaries", {"title": tag, "annual": True, "date": "2024-05-20"}),
         ]:
             record = request(f"/api/admin/{kind}", "POST", payload, 201)
             created.append((kind, record["id"]))
@@ -122,25 +115,6 @@ def main():
                 item["id"] == record["id"]
                 for item in request(f"/api/content/{kind}")["items"]
             )
-        if request("/api/site")["messages_enabled"]:
-            request(
-                "/api/messages", "POST", {"name": tag, "content": "test blessing"}, 201
-            )
-            message = next(
-                item
-                for item in request("/api/admin/content/messages")["items"]
-                if item["name"] == tag
-            )
-            created.append(("messages", message["id"]))
-            assert all(
-                item["id"] != message["id"]
-                for item in request("/api/content/messages")["items"]
-            )
-            request(f"/api/admin/messages/{message['id']}", "PATCH", {"approved": True})
-            assert any(
-                item["id"] == message["id"]
-                for item in request("/api/content/messages")["items"]
-            )
         with tarfile.open(
             fileobj=BytesIO(request("/source.tar.gz")), mode="r:gz"
         ) as archive:
@@ -155,7 +129,7 @@ def main():
                 for name in names
             )
         print(
-            "PASS: MySQL health, 9 routes, auth, 4 CRUD flows, draft isolation, message moderation, source archive"
+            "PASS: MySQL health, 9 routes, auth, 5 CRUD flows, draft isolation, source archive"
         )
     finally:
         for kind, record_id in reversed(created):

@@ -14,6 +14,10 @@ class MailError(Exception):
     """Safe message only; SMTP responses and secrets never leave the provider."""
 
 
+class MailUncertain(MailError):
+    """A connection failed after submission began; the server may have accepted it."""
+
+
 def masked(email: str) -> str:
     local, _, domain = email.partition("@")
     return f"{local[:2]}***@{domain}" if domain else "未设置"
@@ -35,6 +39,8 @@ def smtp_send(config: MailSettings, recipient: str, subject: str, body: Letter):
     message.set_content(body.text)
     message.add_alternative(body.html, subtype="html")
     context = ssl.create_default_context()
+    submitting = False
+    accepted = False
     try:
         if config.security == "ssl":
             connection = smtplib.SMTP_SSL(
@@ -51,9 +57,11 @@ def smtp_send(config: MailSettings, recipient: str, subject: str, body: Letter):
             raise MailError("请选择 SSL/TLS 或 STARTTLS 加密方式")
         with connection as smtp:
             smtp.login(config.username, password)
+            submitting = True
             refused = smtp.send_message(message)
             if refused:
                 raise MailError("收件地址被拒绝，请检查邮箱地址")
+            accepted = True
     except smtplib.SMTPAuthenticationError:
         raise MailError(
             "邮箱认证失败，请检查发件账号、SMTP 授权码及 SMTP 服务开关"
@@ -62,18 +70,29 @@ def smtp_send(config: MailSettings, recipient: str, subject: str, body: Letter):
         raise MailError("收件地址被拒绝，请检查邮箱地址") from None
     except smtplib.SMTPSenderRefused:
         raise MailError("发件地址被拒绝，请确认发件地址与邮箱账号匹配") from None
-    except (smtplib.SMTPException, OSError):
+    except (smtplib.SMTPException, OSError) as error:
+        if accepted:
+            return  # A failed QUIT does not undo a successful DATA response.
+        if submitting and not isinstance(error, smtplib.SMTPResponseException):
+            raise MailUncertain("邮件提交结果未确认，请检查收件箱") from None
         raise MailError(
             "邮件服务连接或投递失败，请检查服务器、端口及加密方式后重试"
         ) from None
 
 
 def deliver(
-    db, recipient: str, event: str, subject: str, body: Letter, actor: str = ""
+    db,
+    recipient: str,
+    event: str,
+    subject: str,
+    body: Letter,
+    actor: str = "",
+    *,
+    record: MailDelivery | None = None,
 ):
     """One attempt per request; uncertain delivery is never automatically retried."""
     recipient = validate_email(recipient, check_deliverability=False).normalized
-    record = MailDelivery(
+    record = record or MailDelivery(
         event=event, recipient=masked(recipient), status="sending", actor=actor
     )
     db.add(record)
@@ -88,7 +107,8 @@ def deliver(
             if isinstance(error, MailError)
             else "邮件发送失败，请检查邮箱配置后重试"
         )
-        record.status, record.detail = "failed", safe_error
+        record.status = "uncertain" if isinstance(error, MailUncertain) else "failed"
+        record.detail = safe_error
         db.commit()
         raise MailError(safe_error) from None
     record.status, record.detail = "sent", "已提交到邮件服务器，请检查收件箱或垃圾邮件"

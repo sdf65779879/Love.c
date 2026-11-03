@@ -48,6 +48,11 @@ export interface Entry {
   image?: string;
   date?: string;
   location?: string;
+  city_id?: string;
+  annual?: boolean;
+  elapsed_days?: number;
+  days_until?: number | null;
+  next_date?: string | null;
   completed?: boolean;
   description?: string;
   sender?: string;
@@ -61,6 +66,14 @@ export interface Page {
   total: number;
   page: number;
   page_size: number;
+}
+export async function allMemories(kind: "places" | "anniversaries"): Promise<Entry[]> {
+  const items: Entry[] = [];
+  for (let page = 1; ; page++) {
+    const batch = await api<Page>(`/content/${kind}?page=${page}&page_size=100`);
+    items.push(...batch.items);
+    if (items.length >= batch.total || !batch.items.length) return items;
+  }
 }
 export const write = (method: string, data: unknown): RequestInit => ({
   method,

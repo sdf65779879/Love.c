@@ -46,6 +46,7 @@ class MailSettings(Base):
 
 class MailDelivery(Base):
     __tablename__ = "mail_deliveries"
+    reminder_key: Mapped[str | None] = mapped_column(String(64), unique=True)
     id: Mapped[int] = mapped_column(primary_key=True)
     event: Mapped[str] = mapped_column(String(30))
     recipient: Mapped[str] = mapped_column(String(254))
@@ -147,3 +148,22 @@ class Message(Base):
     content: Mapped[str] = mapped_column(String(1000))
     approved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class Place(Base):
+    __tablename__ = "places"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    city_id: Mapped[str] = mapped_column(String(64))
+    title: Mapped[str] = mapped_column(String(150))
+    date: Mapped[date] = mapped_column(Date)
+    description: Mapped[str] = mapped_column(Text, default="")
+    image: Mapped[str] = mapped_column(String(500), default="")
+
+
+class Anniversary(Base):
+    __tablename__ = "anniversaries"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(150))
+    date: Mapped[date] = mapped_column(Date)
+    annual: Mapped[bool] = mapped_column(Boolean, default=True)
+    description: Mapped[str] = mapped_column(Text, default="")

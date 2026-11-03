@@ -7,6 +7,7 @@ import Icon from "../components/Icon.vue";
 import Modal from "../components/Modal.vue";
 import SettingsPanels from "../components/SettingsPanels.vue";
 import "../admin.css";
+import CityPicker from "../components/CityPicker.vue";
 import MediaField from "../components/MediaField.vue";
 import MailSettings from "../components/MailSettings.vue";
 const router = useRouter();
@@ -23,11 +24,11 @@ const tabs = [
   { key: "overview", name: "后台首页", icon: "home" },
   { key: "settings", name: "基本设置", icon: "list" },
   { key: "mail", name: "邮箱配置", icon: "message" },
-  { key: "messages", name: "留言管理", icon: "message" },
+  { key: "places", name: "走过的地方", icon: "pin" },
   { key: "articles", name: "点点滴滴", icon: "book" },
   { key: "photos", name: "恋爱相册", icon: "camera" },
   { key: "wishes", name: "恋爱清单", icon: "check" },
-  { key: "gifts", name: "礼物墙", icon: "gift" },
+  { key: "anniversaries", name: "纪念日", icon: "calendar" },
   { key: "about", name: "关于页面", icon: "heart" },
   { key: "password", name: "账号安全", icon: "lock" },
 ];
@@ -35,7 +36,7 @@ const activeTab = computed(() => tabs.find((t) => t.key === tab.value)!);
 type Field = {
   key: string;
   label: string;
-  type: "text" | "textarea" | "date" | "check" | "image";
+  type: "text" | "textarea" | "date" | "check" | "image" | "city";
   required?: boolean;
   max?: number;
 };
@@ -72,18 +73,18 @@ const fields: Record<string, Field[]> = {
     { key: "date", label: "完成日期（可选）", type: "date" },
     { key: "image", label: "纪念照片（可选）", type: "image" },
   ],
-  gifts: [
-    { key: "title", label: "礼物名称", type: "text", required: true, max: 150 },
-    { key: "sender", label: "送礼人", type: "text", required: true, max: 40 },
-    { key: "date", label: "收礼日期", type: "date", required: true },
-    { key: "image", label: "礼物照片（可选）", type: "image" },
-    {
-      key: "description",
-      label: "关于这份礼物的故事",
-      type: "textarea",
-      required: true,
-      max: 3000,
-    },
+  places: [
+    { key: "title", label: "地点名称", type: "text", required: true, max: 150 },
+    { key: "city_id", label: "城市", type: "city", required: true },
+    { key: "date", label: "到访日期", type: "date", required: true },
+    { key: "description", label: "旅行回忆", type: "textarea", max: 3000 },
+    { key: "image", label: "纪念照片（可选）", type: "image" },
+  ],
+  anniversaries: [
+    { key: "title", label: "纪念日名称", type: "text", required: true, max: 150 },
+    { key: "date", label: "纪念日期", type: "date", required: true },
+    { key: "annual", label: "每年重复纪念", type: "check" },
+    { key: "description", label: "关于这一天", type: "textarea", max: 3000 },
   ],
 };
 const editor = ref(false),
@@ -96,7 +97,7 @@ const passwordError = ref("");
 const menuOpen = ref(false);
 const counts = computed<Record<string, number | undefined>>(() => ({
   articles: state.site?.stats.articles, photos: state.site?.stats.photos,
-  wishes: state.site?.stats.wishes, gifts: state.site?.stats.gifts
+  wishes: state.site?.stats.wishes, places: state.site?.stats.places, anniversaries: state.site?.stats.anniversaries
 }));
 let listRequest = 0;
 async function request<T = any>(
@@ -147,7 +148,7 @@ function openEditor(entry?: Entry) {
     form[field.key] = entry
       ? ((entry as any)[field.key] ?? "")
       : field.type === "check"
-        ? field.key === "published"
+        ? ["published", "annual"].includes(field.key)
         : field.type === "date" && field.required
           ? new Intl.DateTimeFormat("en-CA", {
               timeZone: "Asia/Shanghai",
@@ -192,21 +193,6 @@ async function remove() {
   } catch (e) {
     error.value = (e as Error).message;
     deleting.value = null;
-  } finally {
-    busy.value = false;
-  }
-}
-async function moderate(entry: Entry) {
-  busy.value = true;
-  try {
-    await request(
-      `/admin/messages/${entry.id}`,
-      write("PATCH", { approved: !entry.approved }),
-    );
-    notify(entry.approved ? "留言已隐藏" : "祝福已公开");
-    await load();
-  } catch (e) {
-    error.value = (e as Error).message;
   } finally {
     busy.value = false;
   }
@@ -285,7 +271,7 @@ onMounted(async () => {
                     ? "照片"
                     : tab === "wishes"
                       ? "心愿"
-                      : "礼物"
+                      : tab === "places" ? "地点" : "纪念日"
               }}
             </button>
           </div>
@@ -330,9 +316,7 @@ onMounted(async () => {
               <Icon :name="activeTab.icon" :size="35" />
               <h3>
                 {{
-                  tab === "messages"
-                    ? "还没有收到留言"
-                    : "第一份回忆，等你来记录"
+                  "第一份回忆，等你来记录"
                 }}
               </h3>
             </div>
@@ -355,18 +339,11 @@ onMounted(async () => {
                       class="badge"
                       >草稿</span
                     ><span
-                      v-if="tab === 'messages'"
-                      :class="['badge', { approved: item.approved }]"
-                      >{{ item.approved ? "已公开" : "待审核" }}</span
-                    ><span
                       v-if="tab === 'wishes'"
                       :class="['badge', { approved: item.completed }]"
                       >{{ item.completed ? "已完成" : "待实现" }}</span
                     >
                   </h3>
-                  <p v-if="tab === 'messages'" class="preserve">
-                    {{ item.content }}
-                  </p>
                   <small
                     >{{ dateLabel(item.date || item.created_at) }}
                     {{
@@ -376,14 +353,6 @@ onMounted(async () => {
                 </div>
                 <div class="entry-actions">
                   <button
-                    v-if="tab === 'messages'"
-                    class="button secondary small"
-                    :disabled="busy"
-                    @click="moderate(item)"
-                  >
-                    {{ item.approved ? "隐藏" : "通过" }}</button
-                  ><button
-                    v-else
                     class="icon-button"
                     :aria-label="`编辑${item.title}`"
                     @click="openEditor(item)"
@@ -432,8 +401,8 @@ onMounted(async () => {
         @close="!busy && (editor = false)"
         ><form class="editor-form" @submit.prevent="save">
           <template v-for="field in fields[tab]" :key="field.key"
-            ><MediaField
-              v-if="field.type === 'image'"
+            ><CityPicker v-if="field.type === 'city'" v-model="form[field.key]" /><MediaField
+              v-else-if="field.type === 'image'"
               v-model="form[field.key]"
               :label="field.label"
               :required="field.required" /><label

@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from .config import settings
 from .database import SessionLocal
-from .models import Article, Gift, MailSettings, Photo, SiteSettings, User, Wish
+from .models import Article, MailSettings, Photo, SiteSettings, User, Wish
 from .secrets import encrypt_secret
 from .security import password_hash
 
@@ -68,12 +68,6 @@ def seed():
                         Wish(title="拍一组只属于我们的照片"),
                         Wish(title="一起做一顿有点笨拙的晚餐"),
                         Wish(title="写一封信，寄给未来的我们"),
-                        Gift(
-                            title="一封手写的信",
-                            description="字迹有些歪歪扭扭，喜欢却认认真真。\n这是示例礼物，在后台换成你们的回忆吧。",
-                            sender="阿辰",
-                            date=date(2024, 5, 20),
-                        ),
                     ]
                 )
         db.commit()

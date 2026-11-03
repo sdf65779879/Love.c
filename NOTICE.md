@@ -18,3 +18,5 @@ https://github.com/Cleanwn/LikeGirl
 如果修改或另行部署，请确保页脚源码入口可以获取该部署对应的完整源码。
 
 示例人物“阿辰”“小满”、示例故事、心愿、礼物均为演示内容。头像为本重写版本绘制的占位图，可通过管理后台替换。
+
+足迹地图参考 [zkeyoned/map-of-us-template](https://github.com/zkeyoned/map-of-us-template) 的 ChinaMap、ProvinceMap 和 geo 投影代码。离线图形及城市目录由其 china-geo.json、provinces.ts 和 cities.ts 生成，仅包含地理数据。原项目 MIT 许可见 [MAP-LICENSE.txt](backend/app/data/MAP-LICENSE.txt)。

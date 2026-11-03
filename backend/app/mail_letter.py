@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 from html import escape
 from pathlib import Path
 from string import Template
@@ -30,6 +31,28 @@ def couple_letter(name: str, *, code: str | None = None) -> Letter:
         label, highlight, size = "邮箱投递测试", "见信如面", "24px"
         detail = "一封写给你的测试来信"
         reminder = "这次只是试寄，无需回复。下次登录时，验证码也会寄到这里。"
+    return render_letter(
+        greeting, heading, note, label, highlight, detail, reminder, preview, size
+    )
+
+
+def anniversary_letter(name: str, title: str, occasion: date) -> Letter:
+    return render_letter(
+        f"亲爱的{name or '你'}，",
+        "有个日子，快到啦。",
+        "再过两天，就是我们写进日历的这一天。想一起吃顿饭，还是去老地方走走？",
+        "我们的纪念日",
+        title,
+        occasion.strftime("%Y 年 %m 月 %d 日"),
+        "愿我们年年有约，也珍惜每一个平常的今天。",
+        "来自 LOVE.C 的提前两天纪念日提醒。",
+        "24px",
+    )
+
+
+def render_letter(
+    greeting, heading, note, label, highlight, detail, reminder, preview, size
+):
     text = f"{greeting}\n\n{heading}\n{note}\n\n{label}\n{highlight}\n{detail}\n\n{reminder}\n\n爱你的，我们的小站 · LOVE.C"
     html = _TEMPLATE.substitute(
         greeting=escape(greeting),

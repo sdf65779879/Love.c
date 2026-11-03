@@ -79,16 +79,7 @@ watch(
     <p>{{ state.site?.footer_text || "把心动写进生活，把你写进余生。" }}</p>
     <div>
       © {{ new Date().getFullYear() }} {{ state.site?.title || "LOVE.C"
-      }}<span>·</span>Inspired by
-      <a
-        href="https://github.com/Cleanwn/LikeGirl"
-        target="_blank"
-        rel="noopener"
-        >LikeGirl / Ki.</a
-      ><span>·</span><RouterLink to="/admin">管理小站</RouterLink><span>·</span
-      ><a :href="state.site?.source_url || '/source.tar.gz'"
-        >本站源码 · AGPL-3.0</a
-      >
+      }}<span>·</span><RouterLink to="/admin">管理小站</RouterLink>
       <span>·</span><button class="text-link" :disabled="leaving" @click="leave">{{ leaving ? '正在退出…' : '退出小站' }}</button>
     </div>
     <a

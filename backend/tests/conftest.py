@@ -38,6 +38,8 @@ def client(monkeypatch):
     Base.metadata.create_all(engine)
     monkeypatch.setattr(importlib.import_module("app.seed"), "SessionLocal", factory)
     monkeypatch.setattr(main, "engine", engine)
+    # Integration tests drive the scheduler with explicit dates and mock SMTP.
+    monkeypatch.setattr(importlib.import_module("app.reminders"), "check_reminders", lambda db: None)
 
     def override_db():
         with factory() as db:

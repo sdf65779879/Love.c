@@ -21,14 +21,14 @@ export interface Site {
   about_future: string;
   footer_text: string;
   icp: string;
-  messages_enabled: boolean;
   source_url: string;
   stats: {
     articles: number;
     photos: number;
     wishes: number;
     completed: number;
-    gifts: number;
+    places: number;
+    anniversaries: number;
   };
 }
 export const state = reactive({
@@ -67,13 +67,13 @@ export const links = [
     asset: 1,
   },
   {
-    path: "/messages",
-    title: "留言板",
-    en: "LITTLE WISHES",
-    desc: "把温柔的祝福，留在这里。",
-    icon: "message",
+    path: "/places",
+    title: "走过的地方",
+    en: "OUR FOOTPRINTS",
+    desc: "把我们去过的城市，一座座点亮。",
+    icon: "pin",
     color: "pink",
-    asset: 2,
+    asset: 0,
   },
   {
     path: "/about",
@@ -103,12 +103,12 @@ export const links = [
     asset: 5,
   },
   {
-    path: "/gifts",
-    title: "礼物墙",
-    en: "GIFTS OF LOVE",
-    desc: "礼物有价，偏爱无价。",
-    icon: "gift",
+    path: "/anniversaries",
+    title: "纪念日",
+    en: "OUR SPECIAL DAYS",
+    desc: "把值得记住的日子，放在心上。",
+    icon: "calendar",
     color: "green",
-    asset: 6,
+    asset: 0,
   },
 ];

@@ -1,7 +1,6 @@
 import re
 import warnings
 from contextlib import asynccontextmanager
-from datetime import UTC
 from io import BytesIO
 from uuid import uuid4
 
@@ -28,15 +27,16 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import engine, get_db
 from .mail_settings import router as mail_router
-from .models import Article, Gift, Message, Photo, SiteSettings, User, Wish
+from .memories import ATLAS, anniversary_days
+from .models import Anniversary, Article, Photo, Place, SiteSettings, User, Wish
+from .reminders import start_reminders
 from .schemas import (
+    AnniversaryInput,
     ArticleInput,
-    GiftInput,
     LoginInput,
-    MessageInput,
-    ModerationInput,
     PasswordInput,
     PhotoInput,
+    PlaceInput,
     SettingsInput,
     WishInput,
 )
@@ -49,7 +49,12 @@ from .visitor import router as visitor_router
 @asynccontextmanager
 async def lifespan(app):
     seed()
-    yield
+    stop, thread = start_reminders()
+    try:
+        yield
+    finally:
+        stop.set()
+        thread.join(timeout=2)
 
 
 app = FastAPI(
@@ -122,8 +127,8 @@ def serialize(obj):
         column.key: getattr(obj, column.key)
         for column in inspect(obj).mapper.column_attrs
     }
-    if isinstance(obj, Message):
-        data["created_at"] = obj.created_at.replace(tzinfo=UTC)
+    if isinstance(obj, Anniversary):
+        data.update(anniversary_days(obj.date, obj.annual))
     return jsonable_encoder(data)
 
 
@@ -142,7 +147,7 @@ def page_result(db, model, page, page_size, conditions=()):
         .order_by(
             *(
                 [model.date.desc(), model.id.desc()]
-                if model in (Article, Photo, Gift)
+                if model in (Article, Photo, Place, Anniversary)
                 else [model.id.desc()]
             )
         )
@@ -166,6 +171,7 @@ def health(db: Session = Depends(get_db)):
 @app.get("/api/site", dependencies=[Depends(current_viewer)])
 def site(db: Session = Depends(get_db)):
     data = serialize(db.get(SiteSettings, 1))
+    data.pop("messages_enabled", None)
     data["start_date"] += "+08:00"
     data["source_url"] = settings.source_url
     data["stats"] = {
@@ -175,7 +181,8 @@ def site(db: Session = Depends(get_db)):
             ("photos", Photo, ()),
             ("wishes", Wish, ()),
             ("completed", Wish, (Wish.completed.is_(True),)),
-            ("gifts", Gift, ()),
+            ("places", Place, ()),
+            ("anniversaries", Anniversary, ()),
         ]
     }
     return data
@@ -193,8 +200,8 @@ PUBLIC_MODELS = {
     "articles": Article,
     "photos": Photo,
     "wishes": Wish,
-    "gifts": Gift,
-    "messages": Message,
+    "places": Place,
+    "anniversaries": Anniversary,
 }
 
 
@@ -208,13 +215,7 @@ def public_content(
     model = PUBLIC_MODELS.get(kind)
     if not model:
         raise HTTPException(404, "内容类型不存在")
-    conditions = (
-        (Article.published.is_(True),)
-        if kind == "articles"
-        else (Message.approved.is_(True),)
-        if kind == "messages"
-        else ()
-    )
+    conditions = (Article.published.is_(True),) if kind == "articles" else ()
     result = page_result(db, model, page, page_size, conditions)
     if kind == "articles":
         for item in result["items"]:
@@ -222,17 +223,9 @@ def public_content(
     return result
 
 
-@app.post("/api/messages", status_code=201, dependencies=[Depends(current_viewer)])
-def leave_message(data: MessageInput, request: Request, db: Session = Depends(get_db)):
-    if not db.get(SiteSettings, 1).messages_enabled:
-        raise HTTPException(403, "留言板暂时休息中")
-    limiter.check(f"message:{request.client.host}", 3, 300)
-    if data.website:
-        raise HTTPException(400, "留言未通过校验")
-    record = Message(name=data.name, content=data.content)
-    db.add(record)
-    db.commit()
-    return {"message": "祝福已送达，审核通过后会显示在留言板。"}
+@app.get("/api/atlas", dependencies=[Depends(current_viewer)])
+def get_atlas():
+    return ATLAS
 
 
 @app.post("/api/auth/login")
@@ -384,7 +377,8 @@ for kind, model, schema in [
     ("articles", Article, ArticleInput),
     ("photos", Photo, PhotoInput),
     ("wishes", Wish, WishInput),
-    ("gifts", Gift, GiftInput),
+    ("places", Place, PlaceInput),
+    ("anniversaries", Anniversary, AnniversaryInput),
 ]:
     register_content(kind, model, schema)
 
@@ -399,14 +393,6 @@ def delete_record(kind: str, record_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "内容类型不存在")
     db.delete(get_record(db, PUBLIC_MODELS[kind], record_id))
     db.commit()
-
-
-@app.patch("/api/admin/messages/{record_id}", dependencies=[Depends(current_user)])
-def moderate(record_id: int, data: ModerationInput, db: Session = Depends(get_db)):
-    record = get_record(db, Message, record_id)
-    record.approved = data.approved
-    db.commit()
-    return serialize(record)
 
 
 @app.post("/api/admin/upload", dependencies=[Depends(current_user)], status_code=201)

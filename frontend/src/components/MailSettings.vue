@@ -11,8 +11,8 @@ const logError = ref("");
 const payload = () => ({ enabled: form.enabled, host: form.host, port: form.port, username: form.username, from_address: form.from_address, security: form.security });
 const dirty = computed(() => !!form.password || !saved.value || Object.entries(payload()).some(([key,value]) => saved.value?.[key as keyof Config] !== value));
 const receiver = computed(() => partner.value === "boy" ? state.site?.boy_qq : state.site?.girl_qq);
-const events: Record<string,string> = {LOGIN_CODE:"登录验证码", SMTP_TEST:"测试邮件", SETTINGS_UPDATED:"修改邮箱配置"};
-const statuses: Record<string,string> = {sent:"已提交", failed:"失败", saved:"已保存", sending:"发送中"};
+const events: Record<string,string> = {LOGIN_CODE:"登录验证码", ANNIVERSARY_REMINDER:"纪念日提醒", SMTP_TEST:"测试邮件", SETTINGS_UPDATED:"修改邮箱配置"};
+const statuses: Record<string,string> = {sent:"已提交", failed:"失败", saved:"已保存", sending:"发送中", uncertain:"提交结果待确认"};
 let successTimer: ReturnType<typeof setTimeout> | undefined;
 onUnmounted(() => clearTimeout(successTimer));
 async function logs() {
@@ -62,7 +62,7 @@ onMounted(load);
     <div class="console-card">
     <form class="settings-panel" @submit.prevent="save">
       <h1>系统邮箱设置</h1>
-      <p class="settings-help">登录验证码和测试邮件统一使用此邮箱发送。QQ 邮箱需要开启 SMTP 服务，并使用 SMTP 授权码。</p>
+      <p class="settings-help">登录验证码、纪念日提醒和测试邮件统一使用此邮箱发送。QQ 邮箱需要开启 SMTP 服务，并使用 SMTP 授权码。</p>
       <label>系统邮件发送<select v-model="form.enabled" :disabled="saving || sending"><option :value="true">启用</option><option :value="false">停用</option></select></label>
       <label>SMTP 服务器<input v-model.trim="form.host" required maxlength="253" placeholder="smtp.qq.com" :disabled="saving || sending" /></label>
       <div class="couple-fields"><label>SMTP 端口<input v-model.number="form.port" type="number" min="1" max="65535" required :disabled="saving || sending" /></label>

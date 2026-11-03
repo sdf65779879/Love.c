@@ -21,7 +21,7 @@ def test_site_and_health(admin):
         ("/api/admin/articles", "post"),
         ("/api/admin/articles/1", "put"),
         ("/api/admin/articles/1", "delete"),
-        ("/api/admin/messages/1", "patch"),
+        ("/api/admin/places/1", "put"),
         ("/api/admin/site", "put"),
         ("/api/admin/site", "patch"),
         ("/api/admin/upload", "post"),
@@ -96,14 +96,10 @@ def test_csrf_origin_check(admin):
             "wishes",
             {"title": "new wish", "completed": True, "date": "2024-06-01", "image": ""},
         ),
+        ("places", {"title": "旅行", "city_id": "hangzhou", "date": "2025-06-01"}),
         (
-            "gifts",
-            {
-                "title": "new gift",
-                "description": "a letter",
-                "sender": "test",
-                "date": "2024-06-01",
-            },
+            "anniversaries",
+            {"title": "第一次见面", "date": "2024-02-29", "annual": True},
         ),
     ],
 )
@@ -145,31 +141,11 @@ def test_drafts_are_private(admin):
     )
 
 
-def test_message_moderation_round_trip(admin):
-    text = "<script>alert('xss')</script>祝你们幸福"
-    assert (
-        admin.post(
-            "/api/messages", json={"name": "visitor", "content": text}
-        ).status_code
-        == 201
-    )
-    assert admin.get("/api/content/messages").json()["total"] == 0
-    message = admin.get("/api/admin/content/messages").json()["items"][0]
-    assert message["content"] == text and not message["approved"]
-    assert (
-        admin.patch(
-            f"/api/admin/messages/{message['id']}", json={"approved": True}
-        ).status_code
-        == 200
-    )
-    assert admin.get("/api/content/messages").json()["total"] == 1
-    assert (
-        admin.patch(
-            f"/api/admin/messages/{message['id']}", json={"approved": False}
-        ).status_code
-        == 200
-    )
-    assert admin.get("/api/content/messages").json()["total"] == 0
+def test_retired_modules(admin):
+    for kind in ("messages", "gifts"):
+        assert admin.get(f"/api/content/{kind}").status_code == 404
+        assert admin.get(f"/api/admin/content/{kind}").status_code == 404
+    assert admin.post("/api/messages", json={}).status_code == 404
 
 
 def site_payload(client):
@@ -179,19 +155,13 @@ def site_payload(client):
     return data
 
 
-def test_site_settings_and_message_switch(admin):
+def test_site_settings(admin):
     data = site_payload(admin)
-    data.update(
-        boy_name="测试", messages_enabled=False, start_date="2024-05-19T16:00:00Z"
-    )
+    data.update(boy_name="测试", start_date="2024-05-19T16:00:00Z")
     assert admin.put("/api/admin/site", json=data).status_code == 200
     site = admin.get("/api/site").json()
     assert (
         site["boy_name"] == "测试" and site["start_date"] == "2024-05-20T00:00:00+08:00"
-    )
-    assert (
-        admin.post("/api/messages", json={"name": "me", "content": "hello"}).status_code
-        == 403
     )
     data["start_date"] = "2099-01-01T00:00:00"
     assert admin.put("/api/admin/site", json=data).status_code == 422
@@ -266,20 +236,11 @@ def test_image_upload_reencoding(admin):
 
 def test_input_validation(admin):
     assert (
-        admin.post("/api/messages", json={"name": "  ", "content": "hello"}).status_code
-        == 422
-    )
-    assert (
         admin.post(
-            "/api/messages", json={"name": "hi", "content": "hello", "approved": True}
+            "/api/admin/places",
+            json={"title": "Trip", "city_id": "unknown", "date": "2025-01-01"},
         ).status_code
         == 422
-    )
-    assert (
-        admin.post(
-            "/api/messages", json={"name": "hi", "content": "hello", "website": "bot"}
-        ).status_code
-        == 400
     )
     assert (
         admin.post(
@@ -301,19 +262,6 @@ def test_input_validation(admin):
 
 def test_rate_limits(admin):
     client = admin
-    for _ in range(3):
-        assert (
-            client.post(
-                "/api/messages", json={"name": "test", "content": "test"}
-            ).status_code
-            == 201
-        )
-    assert (
-        client.post(
-            "/api/messages", json={"name": "test", "content": "test"}
-        ).status_code
-        == 429
-    )
     # The admin fixture already used one of the ten login attempts.
     for _ in range(9):
         assert (

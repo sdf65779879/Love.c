@@ -33,12 +33,7 @@ const meta: Record<
     en: "OUR BUCKET LIST",
     icon: "list",
   },
-  gifts: {
-    title: "礼物墙",
-    desc: "收到的每一份礼物，都是满满的爱。",
-    en: "GIFTS OF LOVE",
-    icon: "gift",
-  },
+
 };
 const visible = computed(() =>
   entries.value.filter(
@@ -183,22 +178,13 @@ onMounted(load);
               loading="lazy"
             /><span><Icon name="plus" :size="26" /></span>
           </button>
-          <div v-else class="gift-placeholder">
-            <Icon name="gift" :size="55" />
-          </div>
           <div class="collection-copy">
             <span class="tiny-label">{{ dateLabel(item.date) }}</span>
             <h2>{{ item.title }}</h2>
             <p v-if="item.location" class="location">
               <Icon name="pin" :size="14" />{{ item.location }}
             </p>
-            <template v-if="kind === 'gifts'"
-              ><p class="preserve">{{ item.description }}</p>
-              <span class="gift-sender"
-                >来自 {{ item.sender }} 的偏爱
-                <Icon name="heart" :size="13" /></span
-            ></template></div
-        ></template>
+          </div></template>
       </article>
     </div>
     <div v-if="loading" class="status-block">

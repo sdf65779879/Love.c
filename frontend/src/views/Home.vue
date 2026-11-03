@@ -55,7 +55,8 @@ onMounted(async () => {
         :to="link.path"
         :class="['feature-card', link.color]"
       >
-        <img
+        <Icon v-if="!link.asset" :name="link.icon" :size="48" class="memory-card-icon" />
+        <img v-else
           :src="`/images/likegirl_card_${link.asset}.svg`"
           alt=""
           width="54"
@@ -124,3 +125,5 @@ onMounted(async () => {
     </section>
   </div>
 </template>
+
+<style scoped>.feature-card > .memory-card-icon { display:block; width:clamp(33px, 5vw, 48px); height:auto; color:var(--accent-dark); padding:7px; border-radius:12px; background:#faedf0 }</style>

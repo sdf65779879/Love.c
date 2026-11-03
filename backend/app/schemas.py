@@ -5,6 +5,8 @@ from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .memories import CITY_IDS
+
 
 class Input(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
@@ -46,7 +48,9 @@ class SettingsInput(MediaInput):
     logo_text: str = Field(default="", max_length=80)
     avatar_blur: bool = True
     card_titles: dict[
-        Literal["/moments", "/messages", "/about", "/album", "/wishlist", "/gifts"],
+        Literal[
+            "/moments", "/places", "/about", "/album", "/wishlist", "/anniversaries"
+        ],
         Annotated[str, Field(min_length=1, max_length=30)],
     ] = Field(default_factory=dict)
     title: str = Field(min_length=1, max_length=80)
@@ -62,7 +66,6 @@ class SettingsInput(MediaInput):
     about_future: str = Field(min_length=1, max_length=5000)
     footer_text: str = Field(max_length=200)
     icp: str = Field(max_length=100)
-    messages_enabled: bool
 
     @field_validator("start_date")
     @classmethod
@@ -98,19 +101,23 @@ class WishInput(MediaInput):
     image: Media = ""
 
 
-class GiftInput(MediaInput):
+class PlaceInput(MediaInput):
     title: Title
-    description: str = Field(min_length=1, max_length=3000)
-    sender: str = Field(min_length=1, max_length=40)
     date: DateValue
+    city_id: str = Field(max_length=64)
+    description: str = Field(default="", max_length=3000)
     image: Media = ""
 
+    @field_validator("city_id")
+    @classmethod
+    def known_city(cls, value):
+        if value not in CITY_IDS:
+            raise ValueError("请选择地图中的城市")
+        return value
 
-class MessageInput(Input):
-    name: str = Field(min_length=1, max_length=40)
-    content: str = Field(min_length=1, max_length=1000)
-    website: str = Field(default="", max_length=500)
 
-
-class ModerationInput(Input):
-    approved: bool
+class AnniversaryInput(Input):
+    title: Title
+    date: DateValue
+    annual: bool = True
+    description: str = Field(default="", max_length=3000)

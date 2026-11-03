@@ -1,0 +1,21 @@
+.travel-layout { display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start }
+.atlas-paper,.travel-list,.day-card { padding:clamp(18px,3vw,32px);min-width:0 }
+.atlas-paper { background:#fffaf5 }
+.memory-summary,.memory-filters,.map-legend,.day-card .section-kicker { display:flex;align-items:center;gap:10px }
+.memory-summary { justify-content:space-between }
+.travel-map { width:100%;height:clamp(270px,45vw,430px);display:block;margin:10px 0 }
+.travel-map path { fill:#ede1d8;stroke:#fffaf5;stroke-width:1;cursor:pointer }
+.travel-map path.lit { fill:#df9baa }
+.travel-map path.selected,.travel-map path:hover { fill:#d08996 }
+.travel-map path.map-outline { fill:#998379;stroke:none;pointer-events:none }
+.travel-map circle { fill:#91465d;stroke:white;stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer }
+.map-legend,.travel-entry small,.travel-list h2 small,.day-card p { color:#806f67;font-size:13px }
+.map-legend i { width:10px;height:10px;border-radius:50%;background:#df9baa }
+.memory-filters { margin:16px 0 }.memory-filters label {flex:1;min-width:0}.memory-filters select {width:100%;padding:8px;border-radius:6px;background:#fffdfa;border:1px solid var(--line);color:inherit}
+.travel-entry { padding:16px 0;border-top:1px solid var(--line) }
+.travel-entry h3,.day-card h2 {margin:8px 0;overflow-wrap:anywhere}.travel-entry p,.day-card p {line-height:1.8;overflow-wrap:anywhere}
+.place-photo {margin-top:10px;padding:0}.place-photo img {max-height:175px;border-radius:8px}
+.memory-empty {padding:30px 16px;text-align:center;color:#806f67;line-height:1.9}
+.special-days {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+.day-card.nearest {background:#fff5f4}.day-count {margin:18px 0;color:var(--accent-dark);font:36px var(--serif)}.day-count small {font:14px sans-serif}
+@media(max-width:760px){.travel-layout{grid-template-columns:1fr}}

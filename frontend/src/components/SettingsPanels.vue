@@ -8,7 +8,7 @@ import MediaField from "./MediaField.vue";
 defineProps<{ about?: boolean }>();
 const site = state.site!;
 const basic = reactive({ title: site.title, logo_text: site.logo_text || "", subtitle: site.subtitle,
-  avatar_blur: site.avatar_blur !== false, messages_enabled: site.messages_enabled });
+  avatar_blur: site.avatar_blur !== false });
 const couple = reactive({ boy_name: site.boy_name, girl_name: site.girl_name,
   boy_qq: site.boy_qq || "", girl_qq: site.girl_qq || "", boy_avatar: site.boy_avatar,
   girl_avatar: site.girl_avatar, start_date: site.start_date.slice(0, 19) });
@@ -48,7 +48,6 @@ async function save(section: string, data: object) {
       <label>站点 LOGO 文字<input v-model="basic.logo_text" maxlength="80" placeholder="留空使用站点标题" /></label>
       <label>站点文案<textarea v-model="basic.subtitle" maxlength="200" rows="3" /></label>
       <label>头像背景模糊<select v-model="basic.avatar_blur"><option :value="true">开启</option><option :value="false">关闭</option></select></label>
-      <label>开放留言<select v-model="basic.messages_enabled"><option :value="true">开启</option><option :value="false">关闭</option></select></label>
       <p v-if="errors.basic" class="error-text" role="alert">{{ errors.basic }}</p>
       <div class="settings-actions"><button class="button" :disabled="busy.basic">{{ busy.basic ? '保存中…' : '保存基本设置' }}</button></div>
     </form>
