@@ -219,7 +219,8 @@ small {
 .site-header {
   height: 78px;
   background: #fffcf9ed;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 20;
   border-bottom: 1px solid #ffffff90;
 }

@@ -16,6 +16,49 @@
 .travel-entry h3,.day-card h2 {margin:8px 0;overflow-wrap:anywhere}.travel-entry p,.day-card p {line-height:1.8;overflow-wrap:anywhere}
 .place-photo {margin-top:10px;padding:0}.place-photo img {max-height:175px;border-radius:8px}
 .memory-empty {padding:30px 16px;text-align:center;color:#806f67;line-height:1.9}
-.special-days {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
-.day-card.nearest {background:#fff5f4}.day-count {margin:18px 0;color:var(--accent-dark);font:36px var(--serif)}.day-count small {font:14px sans-serif}
+.special-days {
+  display: grid;
+  gap: 16px;
+  max-width: 860px;
+  margin-inline: auto;
+}
+.day-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 24px;
+  padding: clamp(18px, 3vw, 30px);
+  background: #fffdf9;
+  border: 1px solid #e8dfd4;
+  border-radius: 14px;
+}
+.day-card.nearest { background: #fff9f5; border-color: #e5c8bf; }
+.date-leaf {
+  align-self: start;
+  width: 76px;
+  text-align: center;
+  overflow: hidden;
+  border: 1px solid #e7d9cb;
+  border-radius: 6px;
+  background: #fffefb;
+  box-shadow: 0 3px 0 -1px #f0e6da;
+}
+.date-leaf small { display: block; padding: 5px 0; background: #eee4d9; font-size: 10px; letter-spacing: 1px; }
+.nearest .date-leaf small { background: #98596a; color: white; }
+.date-leaf strong { display: block; padding: 5px 0; font: 34px/1.1 Georgia, serif; }
+.day-card .day-type { font-size: 11px; letter-spacing: 1px; }
+.day-type span, .nearest .day-count { color: #924d60; }
+.day-card h2 { margin: 4px 0; font-size: clamp(21px, 3vw, 28px); }
+.day-count { display: flex; align-items: baseline; gap: 6px; color: #79685a; font-size: 13px; }
+.day-count strong { font: 36px/1 Georgia, serif; }
+.day-note { grid-column: 2 / -1; padding-top: 12px; border-top: 1px solid var(--line); }
+.day-note summary { width: fit-content; cursor: pointer; font-size: 13px; color: #765f56; }
+.day-note details[open] p { margin-top: 10px; }
+@media (max-width: 560px) {
+  .day-card { grid-template-columns: 62px minmax(0, 1fr); gap: 8px 16px; }
+  .date-leaf { width: 62px; grid-row: span 2; }
+  .day-count { grid-column: 2; }
+  .day-count strong { font-size: 24px; }
+  .day-note { grid-column: 1 / -1; margin-top: 6px; }
+}
 @media(max-width:760px){.travel-layout{grid-template-columns:1fr}}
