@@ -228,10 +228,28 @@ def test_image_upload_reencoding(admin):
     assert (
         admin.post(
             "/api/admin/upload",
-            files={"file": ("large.png", b"x" * (8 * 1024 * 1024 + 1), "image/png")},
+            files={"file": ("large.png", b"x" * (30 * 1024 * 1024 + 1), "image/png")},
         ).status_code
         == 413
     )
+
+
+def test_image_upload_accepts_30mb_and_preserves_orientation(admin):
+    image = Image.new("RGB", (40, 20), "pink")
+    exif = Image.Exif()
+    exif[274] = 6
+    stream = BytesIO()
+    image.save(stream, format="JPEG", exif=exif)
+    data = stream.getvalue().ljust(30 * 1024 * 1024, b"\0")
+    response = admin.post(
+        "/api/admin/upload", files={"file": ("photo.jpg", data, "image/jpeg")}
+    )
+    assert response.status_code == 201
+    uploaded = admin.get(response.json()["url"])
+    assert uploaded.headers["content-type"] == "image/webp"
+    result = Image.open(BytesIO(uploaded.content))
+    assert result.size == (20, 40)
+    assert not result.getexif()
 
 
 def test_input_validation(admin):

@@ -2,6 +2,7 @@ import re
 import warnings
 from contextlib import asynccontextmanager
 from io import BytesIO
+from threading import Lock
 from uuid import uuid4
 
 from fastapi import (
@@ -402,34 +403,42 @@ def delete_record(kind: str, record_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
+# Keep large decodes from competing for the small server's image memory.
+upload_lock = Lock()
+
+
 @app.post("/api/admin/upload", dependencies=[Depends(current_user)], status_code=201)
-async def upload(file: UploadFile = File(...)):
-    data = await file.read(8 * 1024 * 1024 + 1)
-    await file.close()
-    if len(data) > 8 * 1024 * 1024:
-        raise HTTPException(413, "图片不能超过 8MB")
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", Image.DecompressionBombWarning)
-            with Image.open(BytesIO(data)) as img:
-                if (
-                    img.format not in {"JPEG", "PNG", "WEBP"}
-                    or img.width * img.height > 25000000
-                ):
-                    raise ValueError()
-                img.load()
-                result = ImageOps.exif_transpose(img).convert("RGB")
-                result.thumbnail((2560, 2560))
-                filename = f"{uuid4().hex}.webp"
-                result.save(settings.upload_dir / filename, "WEBP", quality=88)
-    except (
-        UnidentifiedImageError,
-        ValueError,
-        OSError,
-        Image.DecompressionBombError,
-        Image.DecompressionBombWarning,
-    ):
-        raise HTTPException(
-            400, "请上传有效的 JPG、PNG 或 WebP 图片（不超过 2500 万像素）"
-        ) from None
-    return {"url": f"/uploads/{filename}"}
+def upload(file: UploadFile = File(...)):
+    with upload_lock:
+        # Image decoding runs in FastAPI's worker pool so other requests stay responsive.
+        try:
+            data = file.file.read(30 * 1024 * 1024 + 1)
+        finally:
+            file.file.close()
+        if len(data) > 30 * 1024 * 1024:
+            raise HTTPException(413, "图片不能超过 30MB")
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", Image.DecompressionBombWarning)
+                with Image.open(BytesIO(data)) as img:
+                    if (
+                        img.format not in {"JPEG", "PNG", "WEBP"}
+                        or img.width * img.height > 50000000
+                    ):
+                        raise ValueError()
+                    # Downsample before making orientation and RGB copies of large photos.
+                    img.thumbnail((2560, 2560))
+                    result = ImageOps.exif_transpose(img).convert("RGB")
+                    filename = f"{uuid4().hex}.webp"
+                    result.save(settings.upload_dir / filename, "WEBP", quality=88)
+        except (
+            UnidentifiedImageError,
+            ValueError,
+            OSError,
+            Image.DecompressionBombError,
+            Image.DecompressionBombWarning,
+        ):
+            raise HTTPException(
+                400, "请上传有效的 JPG、PNG 或 WebP 图片（不超过 5000 万像素）"
+            ) from None
+        return {"url": f"/uploads/{filename}"}
