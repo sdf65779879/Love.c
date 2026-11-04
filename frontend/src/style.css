@@ -2386,3 +2386,29 @@ small {
     scroll-behavior: auto !important;
   }
 }
+
+/* Share the cover on every content page with the navigation and anchor its top edge. */
+.site-header.cover-header {
+  position: absolute;
+  width: 100%;
+  background: linear-gradient(180deg, #fffaf0a6, #fffaf040);
+}
+.cover-header .brand,
+.cover-header .nav,
+.cover-header .brand small,
+.cover-header .header-note {
+  color: #352c26;
+  text-shadow: 0 1px 3px #fff9e8;
+}
+.cover-header + .hero {
+  height: clamp(486px, 47vw, 760px);
+  padding-top: 78px;
+  background-position: center top;
+}
+@media (max-width: 700px) {
+  .cover-header + .hero {
+    height: 450px;
+    padding-top: 66px;
+    background-position: center top;
+  }
+}

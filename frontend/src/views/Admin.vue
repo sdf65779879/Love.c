@@ -9,6 +9,7 @@ import SettingsPanels from "../components/SettingsPanels.vue";
 import "../admin.css";
 import CityPicker from "../components/CityPicker.vue";
 import MediaField from "../components/MediaField.vue";
+import DateField from "../components/DateField.vue";
 import MailSettings from "../components/MailSettings.vue";
 import { useEditorDraft } from "../useEditorDraft";
 const router = useRouter();
@@ -246,7 +247,7 @@ async function logout() {
 }
 onMounted(async () => {
   try {
-    const user = await api<{ username: string }>("/auth/me");
+    const user = state.adminUsername ? { username: state.adminUsername } : await api<{ username: string }>("/auth/me");
     username.value = user.username;
     ready.value = true;
     menuOpen.value = false;
@@ -434,6 +435,10 @@ onMounted(async () => {
               v-model="(form[field.key] as string)"
               v-model:region="(form._city_region as string)" /><MediaField
               v-else-if="field.type === 'image'"
+              v-model="(form[field.key] as string)"
+              :label="field.label"
+              :required="field.required" /><DateField
+              v-else-if="field.type === 'date'"
               v-model="(form[field.key] as string)"
               :label="field.label"
               :required="field.required" /><label

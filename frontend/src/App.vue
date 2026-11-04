@@ -39,7 +39,7 @@ watch(
 </script>
 <template>
   <a href="#main" class="skip-link">跳到主要内容</a>
-  <header v-if="showSite" class="site-header">
+  <header v-if="showSite" class="site-header cover-header">
     <div class="header-inner">
       <RouterLink to="/" class="brand"
         ><span class="brand-mark"><Icon name="heart" :size="21" /></span

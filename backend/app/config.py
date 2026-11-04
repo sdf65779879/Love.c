@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     database_url: str = (
         "mysql+pymysql://likegirl:likegirl@localhost:3306/likegirl?charset=utf8mb4"
     )
+    redis_url: str = ""
     secret_key: str = Field(min_length=32)
     admin_username: str = "admin"
     admin_password: str = Field(min_length=12)

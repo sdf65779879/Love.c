@@ -25,6 +25,7 @@ from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Session
 
 from .config import settings
+from . import cache
 from .database import engine, get_db
 from .mail_settings import router as mail_router
 from .memories import ATLAS, anniversary_days
@@ -98,7 +99,7 @@ def private_upload(filename: str):
     path = settings.upload_dir / filename
     if not path.is_file():
         raise HTTPException(404, "图片不存在")
-    return FileResponse(path, headers={"Cache-Control": "private, no-store"})
+    return FileResponse(path, media_type="image/webp", headers={"Cache-Control": "private, no-store"})
 
 
 @app.middleware("http")
@@ -170,6 +171,11 @@ def health(db: Session = Depends(get_db)):
 
 @app.get("/api/site", dependencies=[Depends(current_viewer)])
 def site(db: Session = Depends(get_db)):
+    db.rollback()
+    cache_key = cache.site_key()
+    cached = cache.read(cache_key)
+    if cached is not None:
+        return cached
     data = serialize(db.get(SiteSettings, 1))
     data.pop("messages_enabled", None)
     data["start_date"] += "+08:00"
@@ -185,6 +191,7 @@ def site(db: Session = Depends(get_db)):
             ("anniversaries", Anniversary, ()),
         ]
     }
+    cache.write(cache_key, data)
     return data
 
 

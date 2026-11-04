@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from .config import settings
@@ -16,6 +16,13 @@ engine = create_engine(
     else {},
 )
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
+
+@event.listens_for(SessionLocal, "after_commit")
+def invalidate_site_cache(session):
+    from .cache import invalidate
+    invalidate()
+
 
 
 def get_db():

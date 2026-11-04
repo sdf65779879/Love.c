@@ -1,5 +1,14 @@
 name: likegirl
 services:
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
   db:
     image: mysql:8.4
     restart: unless-stopped
@@ -24,6 +33,7 @@ services:
       dockerfile: backend/Dockerfile
     restart: unless-stopped
     environment:
+      REDIS_URL: redis://redis:6379/0
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-likegirl}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-likegirl}?charset=utf8mb4
       SECRET_KEY: ${SECRET_KEY:?Run python scripts/configure.py first}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}

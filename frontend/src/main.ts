@@ -62,19 +62,24 @@ const router = createRouter({
 });
 router.beforeEach(async to => {
   if (to.meta.public) {
+    state.adminUsername = "";
     state.site = null;
     state.error = "";
     state.loading = false;
     return;
   }
   try {
-    await api(to.meta.admin ? "/auth/me" : "/visitor/me");
+    const [user] = await Promise.all([
+      api(to.meta.admin ? "/auth/me" : "/visitor/me"),
+      state.site ? Promise.resolve() : loadSite(),
+    ]);
+    if (to.meta.admin) state.adminUsername = user.username;
   } catch (error) {
+    state.adminUsername = "";
     state.site = null;
     if (error instanceof ApiError && error.status === 401)
       return to.meta.admin ? "/login" : { path: "/enter", query: { next: to.fullPath } };
     return { path: to.meta.admin ? "/login" : "/enter", query: { unavailable: "1" } };
   }
-  if (!state.site) await loadSite();
 });
 createApp(App).use(router).mount("#app");

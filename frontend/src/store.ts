@@ -34,12 +34,13 @@ export interface Site {
 }
 export const state = reactive({
   site: null as Site | null,
+  adminUsername: "",
   error: "",
   loading: true,
   toast: "",
 });
 export async function loadSite() {
-  state.loading = true;
+  state.loading = !state.site;
   state.error = "";
   try {
     state.site = await api<Site>("/site");
